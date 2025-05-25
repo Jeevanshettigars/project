@@ -48,6 +48,7 @@ const LostItemsReport = () => {
   };
 
   // Fetch user reports
+  // Fetch user reports
   const fetchUserReports = async (email) => {
     setIsLoadingHistory(true);
     setErrorMessage('');
@@ -106,7 +107,6 @@ const LostItemsReport = () => {
       setIsLoadingHistory(false);
     }
   };
-
   // Handle login
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -312,12 +312,12 @@ const LostItemsReport = () => {
       margin: '0 auto'
     },
     formContainer: {
-      maxWidth: '400px',
+      maxWidth: '700px',
       margin: '0 auto',
       backgroundColor: 'rgba(255, 255, 255, 0.95)',
       borderRadius: '16px',
-      boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
-      padding: '2rem',
+      boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+      padding: '2.5rem',
       border: '1px solid #e2e8f0'
     },
     card: {
@@ -373,11 +373,7 @@ const LostItemsReport = () => {
     welcomeCard: {
       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
       color: 'white',
-      textAlign: 'center',
-      borderRadius: '16px',
-      padding: '1.5rem',
-      boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
-      marginBottom: '2rem'
+      textAlign: 'center'
     },
     statsGrid: {
       display: 'grid',
@@ -466,15 +462,14 @@ const LostItemsReport = () => {
       color: 'white',
       border: 'none',
       borderRadius: '10px',
-      fontSize: '1rem',
+      fontSize: '0.9rem',
       fontWeight: '600',
       cursor: 'pointer',
       transition: 'all 0.3s ease',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: '0.5rem',
-      width: '100%'
+      gap: '0.5rem'
     },
     buttonSecondary: {
       backgroundColor: '#6b7280',
@@ -700,47 +695,71 @@ const LostItemsReport = () => {
       </div>
 
       {!isLoggedIn ? (
+        /* Login Form */
         <div style={styles.formContainer}>
+          {loginError && (
+            <div style={{...styles.message, ...styles.errorMessage}}>
+              <AlertCircle size={20} style={{marginRight: '0.5rem'}} />
+              Invalid login credentials. Please try again.
+            </div>
+          )}
+
+          <h2 style={{ fontSize: '1.5rem', fontWeight: '600', textAlign: 'center', marginBottom: '2rem' }}>
+            Login to Continue
+          </h2>
+
           <form onSubmit={handleLogin}>
             <div style={styles.formGroup}>
-              <label style={styles.labelRequired}>Email</label>
-              <input
-                type="email"
-                style={styles.input}
-                value={loginData.email}
-                onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
-                required
-              />
+             <FloatingLabelInput
+  type="email"
+  id="email"
+  value={loginData.email}
+  onChange={(e) =>
+    setLoginData(prev => ({ ...prev, email: e.target.value }))
+  }
+  label="Email Address"
+  required={true}
+/>
             </div>
+
             <div style={styles.formGroup}>
-              <label style={styles.labelRequired}>Password</label>
-              <input
+              <FloatingLabelInput
                 type="password"
-                style={styles.input}
+                id="password"
                 value={loginData.password}
-                onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-                required
+                onChange={(e) =>
+    setLoginData(prev => ({ ...prev, password: e.target.value }))
+  }
+                  label="Password"
+                required={true}
               />
             </div>
-            <div style={styles.formGroup}>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={loginData.remember}
-                  onChange={(e) => setLoginData({ ...loginData, remember: e.target.checked })}
-                />
-                Remember me
-              </label>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
+              <input
+                type="checkbox"
+                id="remember"
+                checked={loginData.remember}
+                onChange={(e) => setLoginData(prev => ({ ...prev, remember: e.target.checked }))}
+              />
+              <label htmlFor="remember" style={{ fontSize: '0.9rem' }}>Remember me</label>
             </div>
-            {loginError && (
-              <div style={{ ...styles.message, ...styles.errorMessage }}>
-                <AlertCircle size={20} style={{ marginRight: '0.5rem' }} />
-                Invalid email or password. Please try again.
-              </div>
-            )}
-            <button type="submit" style={styles.button} disabled={isLoggingIn}>
+
+            <button
+              type="submit"
+              disabled={isLoggingIn}
+              style={{
+                ...styles.button,
+                width: '100%',
+                padding: '1rem',
+                opacity: isLoggingIn ? 0.6 : 1
+              }}
+            >
               {isLoggingIn ? (
-                <span style={styles.spinner}></span>
+                <>
+                  <div style={styles.spinner}></div>
+                  Logging in...
+                </>
               ) : (
                 'Login'
               )}
@@ -938,26 +957,25 @@ const LostItemsReport = () => {
                 </h3>
                 
                 <div style={styles.row}>
-                  <div style={styles.formGroup}>
-                    <label style={styles.labelRequired}>Reporter Name</label>
-                    <input
-                      type="text"
-                      style={styles.input}
-                      value={formData.reporterName}
-                      onChange={(e) => setFormData({ ...formData, reporterName: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div style={styles.formGroup}>
-                    <label style={styles.labelRequired}>Reporter Phone</label>
-                    <input
-                      type="tel"
-                      style={styles.input}
-                      value={formData.reporterPhone}
-                      onChange={(e) => setFormData({ ...formData, reporterPhone: e.target.value })}
-                      required
-                    />
-                  </div>
+                 <FloatingLabelInput
+  type="text"
+  id="reporter-name"
+  value={formData.reporterName}
+  onChange={(e) =>
+    setFormData(prev => ({ ...prev, reporterName: e.target.value }))
+  }
+  label="Your Name"
+  required={true}
+/>
+
+                  <FloatingLabelInput
+                    type="tel"
+                    id="reporter-phone"
+                    value={formData.reporterPhone}
+                    onChange={(e) => setFormData(prev => ({ ...prev, reporterPhone: e.target.value }))}
+                    label="Phone Number"
+                    required={true}
+                  />
                 </div>
 
                 <div style={styles.formGroup}>
@@ -965,7 +983,7 @@ const LostItemsReport = () => {
                   <select
                     id="branch"
                     value={formData.branch}
-                    onChange={(e) => setFormData({ ...formData, branch: e.target.value })}
+                    onChange={(e) => setFormData(prev => ({ ...prev, branch: e.target.value }))}
                     style={styles.select}
                     required
                   >
@@ -988,32 +1006,29 @@ const LostItemsReport = () => {
                       type="date"
                       id="incident-date"
                       value={formData.incidentDate}
-                      onChange={(e) => setFormData({ ...formData, incidentDate: e.target.value })}
+                      onChange={(e) => setFormData(prev => ({ ...prev, incidentDate: e.target.value }))}
                       style={styles.input}
                       required
                     />
                   </div>
-                  <div style={styles.formGroup}>
-                    <label htmlFor="time-lost" style={styles.labelRequired}>Approximate Time</label>
-                    <input
-                      type="text"
-                      id="time-lost"
-                      value={formData.timeLost}
-                      onChange={(e) => setFormData({ ...formData, timeLost: e.target.value })}
-                      style={styles.input}
-                    />
-                  </div>
+                  <FloatingLabelInput
+                    type="text"
+                    id="time-lost"
+                    value={formData.timeLost}
+                    onChange={(e) => setFormData(prev => ({ ...prev, timeLost: e.target.value }))}
+                    label="Approximate Time"
+                    required={false}
+                  />
                 </div>
 
                 <div style={styles.formGroup}>
-                  <label htmlFor="location" style={styles.labelRequired}>Last Known Location *</label>
-                  <input
+                  <FloatingLabelInput
                     type="text"
                     id="location"
                     value={formData.location}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    style={styles.input}
-                    required
+                    onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                    label="Last Known Location"
+                    required={true}
                   />
                 </div>
 
@@ -1028,11 +1043,11 @@ const LostItemsReport = () => {
                     <select
                       id="item-category"
                       value={formData.itemCategory}
-                      onChange={(e) => setFormData({ ...formData, itemCategory: e.target.value })}
+                      onChange={(e) => setFormData(prev => ({ ...prev, itemCategory: e.target.value }))}
                       style={styles.select}
                       required
                     >
-                      <option value="">Select Issue</option>
+                      <option value="">Select category</option>
                       <option value="Electronics">Electronics</option>
                       <option value="Personal Item">Personal Item</option>
                       <option value="Book/Notebook">Book/Notebook</option>
@@ -1041,30 +1056,38 @@ const LostItemsReport = () => {
                       <option value="Other">Other</option>
                     </select>
                   </div>
-                  <div style={styles.formGroup}>
-                    <label htmlFor="item-name" style={styles.labelRequired}>Issue Name *</label>
-                    <input
-                      type="text"
-                      id="item-name"
-                      value={formData.itemName}
-                      onChange={(e) => setFormData({ ...formData, itemName: e.target.value })}
-                      style={styles.input}
-                      required
-                    />
-                  </div>
+                  <FloatingLabelInput
+                    type="text"
+                    id="item-name"
+                    value={formData.itemName}
+                    onChange={(e) => setFormData(prev => ({ ...prev, itemName: e.target.value }))}
+                    label="Item Name"
+                    required={true}
+                  />
                 </div>
 
                 <div style={styles.formGroup}>
                   <label htmlFor="item-description" style={styles.labelRequired}>
-                    Incident Description *
+                    Item Description *
                   </label>
                   <textarea
                     id="item-description"
                     value={formData.itemDescription}
-                    onChange={(e) => setFormData({ ...formData, itemDescription: e.target.value })}
+                    onChange={(e) => setFormData(prev => ({ ...prev, itemDescription: e.target.value }))}
                     style={styles.textarea}
-                    placeholder="Detailed description Of the issue faced by you."
+                    placeholder="Detailed description including color, brand, model, distinguishing features..."
                     required
+                  />
+                </div>
+
+                <div style={styles.formGroup}>
+                  <FloatingLabelInput
+                    type="text"
+                    id="item-value"
+                    value={formData.itemValue}
+                    onChange={(e) => setFormData(prev => ({ ...prev, itemValue: e.target.value }))}
+                    label="Estimated Value (optional)"
+                    required={false}
                   />
                 </div>
 
@@ -1078,7 +1101,7 @@ const LostItemsReport = () => {
                   <textarea
                     id="additional-notes"
                     value={formData.additionalNotes}
-                    onChange={(e) => setFormData({ ...formData, additionalNotes: e.target.value })}
+                    onChange={(e) => setFormData(prev => ({ ...prev, additionalNotes: e.target.value }))}
                     style={styles.textarea}
                     placeholder="Any additional information that might help..."
                   />
