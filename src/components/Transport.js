@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { AlertCircle, CheckCircle, Clock, MapPin, Package, User, History, Plus, Eye, Calendar, Phone, Mail, Building } from 'lucide-react';
 
-const TransportForm = () => {
+const LostItemsReport = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard', 'form', 'history'
   const [loginError, setLoginError] = useState(false);
@@ -26,12 +26,14 @@ const TransportForm = () => {
   const [formData, setFormData] = useState({
     reporterName: '',
     reporterPhone: '',
-    busRoute: '',
+    branch: '',
     incidentDate: '',
-    incidentTime: '',
-    issueType: '',
-    description: '',
-    severity: '',
+    timeLost: '',
+    location: '',
+    itemCategory: '',
+    itemName: '',
+    itemDescription: '',
+    itemValue: '',
     additionalNotes: ''
   });
 
@@ -45,6 +47,7 @@ const TransportForm = () => {
     return name.trim() || 'User';
   };
 
+  // Fetch user reports
   // Fetch user reports
   const fetchUserReports = async (email) => {
     setIsLoadingHistory(true);
@@ -72,16 +75,18 @@ const TransportForm = () => {
           const transformedReports = (data.reports || []).map(report => ({
             id: report.id || `RPT${Date.now()}`,
             timestamp: report.timestamp || new Date().toISOString(),
-            issueType: report.issueType || 'Unknown Issue',
-            busRoute: report.busRoute || 'Unknown Route',
+            itemName: report.itemName || 'Unknown Item',
+            itemCategory: report.itemCategory || 'Other',
+            location: report.location || 'Unknown Location',
             status: report.status || 'Under Investigation',
             incidentDate: report.incidentDate || new Date().toISOString().split('T')[0],
-            description: report.description || 'No description provided',
+            branch: report.branch || 'Unknown Campus',
+            itemDescription: report.itemDescription || 'No description provided',
+            itemValue: report.itemValue || '',
             reporterPhone: report.reporterPhone || '',
-            incidentTime: report.incidentTime || '',
+            timeLost: report.timeLost || '',
             additionalNotes: report.additionalNotes || '',
             reporterName: report.reporterName || '',
-            severity: report.severity || '',
             reporterEmail: report.reporterEmail || email
           }));
           
@@ -102,7 +107,6 @@ const TransportForm = () => {
       setIsLoadingHistory(false);
     }
   };
-
   // Handle login
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -162,12 +166,14 @@ const TransportForm = () => {
     setFormData({
       reporterName: '',
       reporterPhone: '',
-      busRoute: '',
+      branch: '',
       incidentDate: '',
-      incidentTime: '',
-      issueType: '',
-      description: '',
-      severity: '',
+      timeLost: '',
+      location: '',
+      itemCategory: '',
+      itemName: '',
+      itemDescription: '',
+      itemValue: '',
       additionalNotes: ''
     });
 
@@ -193,7 +199,7 @@ const TransportForm = () => {
     setErrorMessage('');
     setIsSubmitting(true);
 
-    const requiredFields = ['reporterName', 'reporterPhone', 'busRoute', 'incidentDate', 'issueType', 'description', 'severity'];
+    const requiredFields = ['reporterName', 'reporterPhone', 'branch', 'incidentDate', 'location', 'itemCategory', 'itemName', 'itemDescription'];
     const missingFields = requiredFields.filter(field => !formData[field]);
 
     if (missingFields.length > 0) {
@@ -206,7 +212,7 @@ const TransportForm = () => {
     const submissionData = {
       action: "submitReport",
       timestamp: timestamp,
-      reportType: "Transport Issues",
+      reportType: "Transport Report",
       reporterEmail: userEmail,
       ...formData
     };
@@ -228,12 +234,14 @@ const TransportForm = () => {
       setFormData({
         reporterName,
         reporterPhone: '',
-        busRoute: '',
+        branch: '',
         incidentDate: '',
-        incidentTime: '',
-        issueType: '',
-        description: '',
-        severity: '',
+        timeLost: '',
+        location: '',
+        itemCategory: '',
+        itemName: '',
+        itemDescription: '',
+        itemValue: '',
         additionalNotes: ''
       });
 
@@ -267,7 +275,7 @@ const TransportForm = () => {
   // Get status color
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Resolved': return '#22c55e';
+      case 'Found': return '#22c55e';
       case 'Under Investigation': return '#f59e0b';
       case 'Closed': return '#6b7280';
       default: return '#3b82f6';
@@ -304,12 +312,12 @@ const TransportForm = () => {
       margin: '0 auto'
     },
     formContainer: {
-      maxWidth: '400px',
+      maxWidth: '700px',
       margin: '0 auto',
       backgroundColor: 'rgba(255, 255, 255, 0.95)',
       borderRadius: '16px',
-      boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
-      padding: '2rem',
+      boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+      padding: '2.5rem',
       border: '1px solid #e2e8f0'
     },
     card: {
@@ -365,11 +373,7 @@ const TransportForm = () => {
     welcomeCard: {
       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
       color: 'white',
-      textAlign: 'center',
-      borderRadius: '16px',
-      padding: '1.5rem',
-      boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
-      marginBottom: '2rem'
+      textAlign: 'center'
     },
     statsGrid: {
       display: 'grid',
@@ -410,7 +414,7 @@ const TransportForm = () => {
     reportHeader: {
       display: 'flex',
       justifyContent: 'space-between',
-      alignItems: 'center',
+      alignItems: 'flex-start',
       marginBottom: '1rem'
     },
     reportMeta: {
@@ -458,15 +462,14 @@ const TransportForm = () => {
       color: 'white',
       border: 'none',
       borderRadius: '10px',
-      fontSize: '1rem',
+      fontSize: '0.9rem',
       fontWeight: '600',
       cursor: 'pointer',
       transition: 'all 0.3s ease',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: '0.5rem',
-      width: '100%'
+      gap: '0.5rem'
     },
     buttonSecondary: {
       backgroundColor: '#6b7280',
@@ -625,35 +628,31 @@ const TransportForm = () => {
         <div style={styles.reportMeta}>
           <div style={styles.metaItem}>
             <Package size={16} />
-            <span><strong>Issue:</strong> {report.issueType}</span>
+            <span><strong>Item:</strong> {report.itemName}</span>
           </div>
           <div style={styles.metaItem}>
             <Calendar size={16} />
-            <span><strong>Date:</strong> {new Date(report.incidentDate).toLocaleDateString()}</span>
-          </div>
-          <div style={styles.metaItem}>
-            <Clock size={16} />
-            <span><strong>Time:</strong> {report.incidentTime}</span>
+            <span><strong>Date Lost:</strong> {new Date(report.incidentDate).toLocaleDateString()}</span>
           </div>
           <div style={styles.metaItem}>
             <MapPin size={16} />
-            <span><strong>Route:</strong> {report.busRoute}</span>
+            <span><strong>Location:</strong> {report.location}</span>
           </div>
           <div style={styles.metaItem}>
-            <AlertCircle size={16} />
-            <span><strong>Severity:</strong> {report.severity}</span>
+            <Building size={16} />
+            <span><strong>Campus:</strong> {report.branch}</span>
           </div>
         </div>
 
         <div style={{ marginTop: '1.5rem' }}>
           <h4 style={{ marginBottom: '0.5rem' }}>Description:</h4>
-          <p style={{ color: '#6b7280', lineHeight: '1.5' }}>{report.description}</p>
+          <p style={{ color: '#6b7280', lineHeight: '1.5' }}>{report.itemDescription}</p>
         </div>
 
-        {report.additionalNotes && (
+        {report.itemValue && (
           <div style={{ marginTop: '1rem' }}>
-            <h4 style={{ marginBottom: '0.5rem' }}>Additional Notes:</h4>
-            <p style={{ color: '#6b7280' }}>{report.additionalNotes}</p>
+            <h4 style={{ marginBottom: '0.5rem' }}>Estimated Value:</h4>
+            <p style={{ color: '#6b7280' }}>{report.itemValue}</p>
           </div>
         )}
 
@@ -691,52 +690,76 @@ const TransportForm = () => {
       </style>
       
       <div style={styles.header}>
-        <h1 style={styles.title}>Transport Issues Portal</h1>
-        <p style={styles.subtitle}>Campus Transport Management System</p>
+        <h1 style={styles.title}>Transport Portal</h1>
+        <p style={styles.subtitle}>Campus Lost & Found Management System</p>
       </div>
 
       {!isLoggedIn ? (
+        /* Login Form */
         <div style={styles.formContainer}>
+          {loginError && (
+            <div style={{...styles.message, ...styles.errorMessage}}>
+              <AlertCircle size={20} style={{marginRight: '0.5rem'}} />
+              Invalid login credentials. Please try again.
+            </div>
+          )}
+
+          <h2 style={{ fontSize: '1.5rem', fontWeight: '600', textAlign: 'center', marginBottom: '2rem' }}>
+            Login to Continue
+          </h2>
+
           <form onSubmit={handleLogin}>
             <div style={styles.formGroup}>
-              <label style={styles.labelRequired}>Email</label>
-              <input
-                type="email"
-                style={styles.input}
-                value={loginData.email}
-                onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
-                required
-              />
+             <FloatingLabelInput
+  type="email"
+  id="email"
+  value={loginData.email}
+  onChange={(e) =>
+    setLoginData(prev => ({ ...prev, email: e.target.value }))
+  }
+  label="Email Address"
+  required={true}
+/>
             </div>
+
             <div style={styles.formGroup}>
-              <label style={styles.labelRequired}>Password</label>
-              <input
+              <FloatingLabelInput
                 type="password"
-                style={styles.input}
+                id="password"
                 value={loginData.password}
-                onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-                required
+                onChange={(e) =>
+    setLoginData(prev => ({ ...prev, email: e.target.value }))
+  }
+                  label="Password"
+                required={true}
               />
             </div>
-            <div style={styles.formGroup}>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={loginData.remember}
-                  onChange={(e) => setLoginData({ ...loginData, remember: e.target.checked })}
-                />
-                Remember me
-              </label>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
+              <input
+                type="checkbox"
+                id="remember"
+                checked={loginData.remember}
+                onChange={(e) => setLoginData(prev => ({ ...prev, remember: e.target.checked }))}
+              />
+              <label htmlFor="remember" style={{ fontSize: '0.9rem' }}>Remember me</label>
             </div>
-            {loginError && (
-              <div style={{ ...styles.message, ...styles.errorMessage }}>
-                <AlertCircle size={20} style={{ marginRight: '0.5rem' }} />
-                Invalid email or password. Please try again.
-              </div>
-            )}
-            <button type="submit" style={styles.button} disabled={isLoggingIn}>
+
+            <button
+              type="submit"
+              disabled={isLoggingIn}
+              style={{
+                ...styles.button,
+                width: '100%',
+                padding: '1rem',
+                opacity: isLoggingIn ? 0.6 : 1
+              }}
+            >
               {isLoggingIn ? (
-                <span style={styles.spinner}></span>
+                <>
+                  <div style={styles.spinner}></div>
+                  Logging in...
+                </>
               ) : (
                 'Login'
               )}
@@ -773,7 +796,7 @@ const TransportForm = () => {
                 }}
               >
                 <Plus size={18} />
-                Report Issue
+                Report Transport Report
               </button>
               <button
                 onClick={() => setCurrentView('history')}
@@ -798,7 +821,7 @@ const TransportForm = () => {
               <div style={{...styles.card, ...styles.welcomeCard}}>
                 <h2 style={{ fontSize: '2rem', marginBottom: '1rem' }}>Welcome to Your Dashboard</h2>
                 <p style={{ fontSize: '1.1rem', opacity: '0.9', margin: '0' }}>
-                  Manage your transport issue reports and track their status
+                  Manage your Transport reports and track their status
                 </p>
               </div>
 
@@ -822,9 +845,9 @@ const TransportForm = () => {
                   </div>
                   <div>
                     <h3 style={{ margin: '0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
-                      {userReports.filter(r => r.status === 'Resolved').length}
+                      {userReports.filter(r => r.status === 'Found').length}
                     </h3>
-                    <p style={{ margin: '0', color: '#6b7280', fontSize: '0.9rem' }}>Resolved</p>
+                    <p style={{ margin: '0', color: '#6b7280', fontSize: '0.9rem' }}>Items Found</p>
                   </div>
                 </div>
 
@@ -850,7 +873,7 @@ const TransportForm = () => {
                     style={{...styles.button, padding: '1.5rem', flexDirection: 'column', height: 'auto'}}
                   >
                     <Plus size={24} />
-                    <span style={{ marginTop: '0.5rem' }}>Report New Transport Issue</span>
+                    <span style={{ marginTop: '0.5rem' }}>Report New Transport Report</span>
                   </button>
                   <button
                     onClick={() => setCurrentView('history')}
@@ -877,10 +900,10 @@ const TransportForm = () => {
                         <div style={styles.reportHeader}>
                           <div>
                             <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '1.1rem', fontWeight: '600' }}>
-                              {report.issueType}
+                              {report.itemName}
                             </h4>
                             <p style={{ margin: '0', color: '#6b7280', fontSize: '0.9rem' }}>
-                              {report.busRoute}
+                              {report.itemCategory}
                             </p>
                           </div>
                           <span style={{...styles.statusBadge, backgroundColor: getStatusColor(report.status)}}>
@@ -894,8 +917,8 @@ const TransportForm = () => {
                             <span>{formatDate(report.timestamp)}</span>
                           </div>
                           <div style={styles.metaItem}>
-                            <AlertCircle size={14} />
-                            <span>{report.severity}</span>
+                            <MapPin size={14} />
+                            <span>{report.location}</span>
                           </div>
                         </div>
                       </div>
@@ -924,7 +947,7 @@ const TransportForm = () => {
               )}
 
               <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '2rem', textAlign: 'center' }}>
-                Report Transport Issue
+                Report Transport
               </h2>
 
               <form onSubmit={handleSubmit}>
@@ -934,44 +957,37 @@ const TransportForm = () => {
                 </h3>
                 
                 <div style={styles.row}>
-                  <div style={styles.formGroup}>
-                    <label style={styles.labelRequired}>Reporter Name</label>
-                    <input
-                      type="text"
-                      style={styles.input}
-                      value={formData.reporterName}
-                      onChange={(e) => setFormData({ ...formData, reporterName: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div style={styles.formGroup}>
-                    <label style={styles.labelRequired}>Reporter Phone</label>
-                    <input
-                      type="tel"
-                      style={styles.input}
-                      value={formData.reporterPhone}
-                      onChange={(e) => setFormData({ ...formData, reporterPhone: e.target.value })}
-                      required
-                    />
-                  </div>
+                  <FloatingLabelInput
+                    type="text"
+                    id="reporter-name"
+                    value={formData.reporterName}
+                    onChange={(e) => setFormData(prev => ({ ...prev, reporterName: e.target.value }))}
+                    label="Your Name"
+                    required={true}
+                  />
+                  <FloatingLabelInput
+                    type="tel"
+                    id="reporter-phone"
+                    value={formData.reporterPhone}
+                    onChange={(e) => setFormData(prev => ({ ...prev, reporterPhone: e.target.value }))}
+                    label="Phone Number"
+                    required={true}
+                  />
                 </div>
 
                 <div style={styles.formGroup}>
-                  <label htmlFor="busRoute" style={styles.labelRequired}>Bus Route/Number *</label>
+                  <label htmlFor="branch" style={styles.labelRequired}>Campus Branch *</label>
                   <select
-                    id="busRoute"
-                    value={formData.busRoute}
-                    onChange={(e) => setFormData({ ...formData, busRoute: e.target.value })}
+                    id="branch"
+                    value={formData.branch}
+                    onChange={(e) => setFormData(prev => ({ ...prev, branch: e.target.value }))}
                     style={styles.select}
                     required
                   >
-                    <option value="">Select bus route</option>
-                    <option value="Route 1A - Banashankari">Route 1A - Banashankari</option>
-                    <option value="Route 2B - Jayanagar">Route 2B - Jayanagar</option>
-                    <option value="Route 3C - Electronic City">Route 3C - Electronic City</option>
-                    <option value="Route 4D - Whitefield">Route 4D - Whitefield</option>
-                    <option value="Route 5E - Hebbal">Route 5E - Hebbal</option>
-                    <option value="Other">Other</option>
+                    <option value="">Select campus branch</option>
+                    <option value="FET Campus">FET Campus</option>
+                    <option value="PU Block">PU Block</option>
+                    <option value="Aerospace Campus">Aerospace Campus</option>
                   </select>
                 </div>
 
@@ -982,143 +998,240 @@ const TransportForm = () => {
 
                 <div style={styles.row}>
                   <div style={styles.formGroup}>
-                    <label htmlFor="incidentDate" style={styles.labelRequired}>Date of Incident *</label>
+                    <label htmlFor="incident-date" style={styles.labelRequired}>Date Lost *</label>
                     <input
                       type="date"
-                      id="incidentDate"
+                      id="incident-date"
                       value={formData.incidentDate}
-                      onChange={(e) => setFormData({ ...formData, incidentDate: e.target.value })}
+                      onChange={(e) => setFormData(prev => ({ ...prev, incidentDate: e.target.value }))}
                       style={styles.input}
                       required
                     />
                   </div>
-                  <div style={styles.formGroup}>
-                    <label htmlFor="incidentTime" style={styles.labelRequired}>Approximate Time</label>
-                    <input
-                      type="time"
-                      id="incidentTime"
-                      value={formData.incidentTime}
-                      onChange={(e) => setFormData({ ...formData, incidentTime: e.target.value })}
-                      style={styles.input}
-                    />
-                  </div>
+                  <FloatingLabelInput
+                    type="text"
+                    id="time-lost"
+                    value={formData.timeLost}
+                    onChange={(e) => setFormData(prev => ({ ...prev, timeLost: e.target.value }))}
+                    label="Approximate Time"
+                    required={false}
+                  />
                 </div>
+
+                <div style={styles.formGroup}>
+                  <FloatingLabelInput
+                    type="text"
+                    id="location"
+                    value={formData.location}
+                    onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                    label="Last Known Location"
+                    required={true}
+                  />
+                </div>
+
+                {/* Item Information */}
+                <h3 style={{ fontSize: '1.2rem', fontWeight: '600', margin: '2rem 0 1.5rem 0', color: '#374151' }}>
+                  Item Information
+                </h3>
 
                 <div style={styles.row}>
                   <div style={styles.formGroup}>
-                    <label htmlFor="issueType" style={styles.labelRequired}>Type of Issue *</label>
+                    <label htmlFor="item-category" style={styles.labelRequired}>Item Category *</label>
                     <select
-                      id="issueType"
-                      value={formData.issueType}
-                      onChange={(e) => setFormData({ ...formData, issueType: e.target.value })}
+                      id="item-category"
+                      value={formData.itemCategory}
+                      onChange={(e) => setFormData(prev => ({ ...prev, itemCategory: e.target.value }))}
                       style={styles.select}
                       required
                     >
-                      <option value="">Select issue type</option>
-                      <option value="Bus Breakdown">Bus Breakdown</option>
-                      <option value="Late Arrival">Late Arrival</option>
-                      <option value="Route Change">Route Change</option>
-                      <option value="Overcrowding">Overcrowding</option>
-                      <option value="Driver Behavior">Driver Behavior</option>
+                      <option value="">Select category</option>
+                      <option value="Electronics">Electronics</option>
+                      <option value="Personal Item">Personal Item</option>
+                      <option value="Book/Notebook">Book/Notebook</option>
+                      <option value="Clothing">Clothing</option>
+                      <option value="ID/Card">ID/Card</option>
                       <option value="Other">Other</option>
                     </select>
                   </div>
-                  <div style={styles.formGroup}>
-                    <label htmlFor="severity" style={styles.labelRequired}>Severity *</label>
-                    <select
-                      id="severity"
-                      value={formData.severity}
-                      onChange={(e) => setFormData({ ...formData, severity: e.target.value })}
-                      style={styles.select}
-                      required
-                    >
-                      <option value="">Select severity</option>
-                      <option value="Low">Low</option>
-                      <option value="Medium">Medium</option>
-                      <option value="High">High</option>
-                      <option value="Critical">Critical</option>
-                    </select>
-                  </div>
+                  <FloatingLabelInput
+                    type="text"
+                    id="item-name"
+                    value={formData.itemName}
+                    onChange={(e) => setFormData(prev => ({ ...prev, itemName: e.target.value }))}
+                    label="Item Name"
+                    required={true}
+                  />
                 </div>
 
-                {/* Issue Description */}
                 <div style={styles.formGroup}>
-                  <label htmlFor="description" style={styles.labelRequired}>Description *</label>
+                  <label htmlFor="item-description" style={styles.labelRequired}>
+                    Item Description *
+                  </label>
                   <textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    id="item-description"
+                    value={formData.itemDescription}
+                    onChange={(e) => setFormData(prev => ({ ...prev, itemDescription: e.target.value }))}
                     style={styles.textarea}
+                    placeholder="Detailed description including color, brand, model, distinguishing features..."
                     required
                   />
                 </div>
 
-                {/* Additional Notes */}
                 <div style={styles.formGroup}>
-                  <label htmlFor="additionalNotes">Additional Notes</label>
-                  <textarea
-                    id="additionalNotes"
-                    value={formData.additionalNotes}
-                    onChange={(e) => setFormData({ ...formData, additionalNotes: e.target.value })}
-                    style={styles.textarea}
+                  <FloatingLabelInput
+                    type="text"
+                    id="item-value"
+                    value={formData.itemValue}
+                    onChange={(e) => setFormData(prev => ({ ...prev, itemValue: e.target.value }))}
+                    label="Estimated Value (optional)"
+                    required={false}
                   />
                 </div>
 
-                {/* Submit Button */}
-                <div style={{ marginTop: '2rem' }}>
-                  <button type="submit" style={styles.button} disabled={isSubmitting}>
-                    {isSubmitting ? <span style={styles.spinner}></span> : 'Submit Report'}
-                  </button>
+                {/* Additional Information */}
+                <h3 style={{ fontSize: '1.2rem', fontWeight: '600', margin: '2rem 0 1.5rem 0', color: '#374151' }}>
+                  Additional Information
+                </h3>
+
+                <div style={styles.formGroup}>
+                  <label htmlFor="additional-notes" style={styles.labelRequired}>Additional Notes</label>
+                  <textarea
+                    id="additional-notes"
+                    value={formData.additionalNotes}
+                    onChange={(e) => setFormData(prev => ({ ...prev, additionalNotes: e.target.value }))}
+                    style={styles.textarea}
+                    placeholder="Any additional information that might help..."
+                  />
                 </div>
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  style={{
+                    ...styles.button,
+                    width: '100%',
+                    padding: '1rem',
+                    opacity: isSubmitting ? 0.6 : 1
+                  }}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div style={styles.spinner}></div>
+                      Submitting Report...
+                    </>
+                  ) : (
+                    'Submit Transport Report'
+                  )}
+                </button>
               </form>
             </div>
           )}
 
-          {/* User Reports / History View */}
+          {/* History View */}
           {currentView === 'history' && (
-            <div>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1.5rem' }}>Your Reports</h2>
+            <div style={styles.card}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: '600', margin: '0' }}>My Reports</h2>
+                <button
+                  onClick={() => fetchUserReports(userEmail)}
+                  disabled={isLoadingHistory}
+                  style={{...styles.button, width: 'auto'}}
+                >
+                  {isLoadingHistory ? (
+                    <>
+                      <div style={styles.spinner}></div>
+                      Refreshing...
+                    </>
+                  ) : (
+                    'Refresh'
+                  )}
+                </button>
+              </div>
+
               {isLoadingHistory ? (
-                <p>Loading reports...</p>
-              ) : errorMessage ? (
-                <p style={{ color: '#b91c1c' }}>{errorMessage}</p>
+                <div style={{ textAlign: 'center', padding: '3rem', color: '#6b7280' }}>
+                  <div style={styles.spinner}></div>
+                  <p style={{ marginTop: '1rem' }}>Loading your reports...</p>
+                </div>
               ) : userReports.length === 0 ? (
-                <p>No reports found.</p>
+                <div style={{ textAlign: 'center', padding: '3rem', color: '#6b7280' }}>
+                  <Package size={48} style={{ marginBottom: '1rem', opacity: '0.5' }} />
+                  <h3 style={{ margin: '0 0 1rem 0' }}>No Reports Found</h3>
+                  <p style={{ margin: '0 0 2rem 0' }}>You haven't submitted any Transport reports yet.</p>
+                  <button
+                    onClick={() => setCurrentView('form')}
+                    style={styles.button}
+                  >
+                    <Plus size={16} />
+                    Create First Report
+                  </button>
+                </div>
               ) : (
                 <div style={styles.reportsGrid}>
-                  {userReports.map((report) => (
+                  {userReports.map((report, index) => (
                     <div
-                      key={report.id}
+                      key={index}
+                      className="report-card"
                       style={styles.reportCard}
                       onClick={() => setSelectedReport(report)}
                     >
                       <div style={styles.reportHeader}>
                         <div>
-                          <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '1.1rem', fontWeight: '600' }}>
-                            {report.issueType}
+                          <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '1.2rem', fontWeight: '600' }}>
+                            {report.itemName}
                           </h4>
                           <p style={{ margin: '0', color: '#6b7280', fontSize: '0.9rem' }}>
-                            {report.busRoute}
+                            Report ID: {report.id}
                           </p>
                         </div>
-                        <span
-                          style={{
-                            ...styles.statusBadge,
-                            backgroundColor: getStatusColor(report.status)
-                          }}
-                        >
+                        <span style={{...styles.statusBadge, backgroundColor: getStatusColor(report.status)}}>
                           {report.status}
                         </span>
                       </div>
+                      
                       <div style={styles.reportMeta}>
                         <div style={styles.metaItem}>
-                          <Calendar size={14} />
-                          <span>{formatDate(report.timestamp)}</span>
+                          <Calendar size={16} />
+                          <span>Reported: {formatDate(report.timestamp)}</span>
                         </div>
                         <div style={styles.metaItem}>
-                          <AlertCircle size={14} />
-                          <span>{report.severity}</span>
+                          <Clock size={16} />
+                          <span>Lost: {new Date(report.incidentDate).toLocaleDateString()}</span>
                         </div>
+                        <div style={styles.metaItem}>
+                          <MapPin size={16} />
+                          <span>{report.location}</span>
+                        </div>
+                        <div style={styles.metaItem}>
+                          <Building size={16} />
+                          <span>{report.branch}</span>
+                        </div>
+                      </div>
+
+                      <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
+                        <p style={{ margin: '0', fontSize: '0.9rem', color: '#374151', lineHeight: '1.4' }}>
+                          {report.itemDescription.length > 100 
+                            ? `${report.itemDescription.substring(0, 100)}...` 
+                            : report.itemDescription
+                          }
+                        </p>
+                      </div>
+
+                      <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={styles.metaItem}>
+                          <Package size={16} />
+                          <span>{report.itemCategory}</span>
+                        </div>
+                        <button
+                          style={{...styles.button, padding: '0.5rem 1rem', fontSize: '0.8rem'}}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedReport(report);
+                          }}
+                        >
+                          <Eye size={14} />
+                          View Details
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -1126,15 +1239,18 @@ const TransportForm = () => {
               )}
             </div>
           )}
-
-          {/* Report Details Modal */}
-          {selectedReport && (
-            <ReportModal report={selectedReport} onClose={() => setSelectedReport(null)} />
-          )}
         </div>
+      )}
+
+      {/* Report Detail Modal */}
+      {selectedReport && (
+        <ReportModal
+          report={selectedReport}
+          onClose={() => setSelectedReport(null)}
+        />
       )}
     </div>
   );
 };
 
-export default TransportForm;
+export default LostItemsReport;
