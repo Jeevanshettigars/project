@@ -1032,7 +1032,7 @@ const LostItemsReport = () => {
                       style={styles.select}
                       required
                     >
-                      <option value="">Select category</option>
+                      <option value="">Select Issue</option>
                       <option value="Electronics">Electronics</option>
                       <option value="Personal Item">Personal Item</option>
                       <option value="Book/Notebook">Book/Notebook</option>
@@ -1042,7 +1042,7 @@ const LostItemsReport = () => {
                     </select>
                   </div>
                   <div style={styles.formGroup}>
-                    <label htmlFor="item-name" style={styles.labelRequired}>Item Name *</label>
+                    <label htmlFor="item-name" style={styles.labelRequired}>Issue Name *</label>
                     <input
                       type="text"
                       id="item-name"
@@ -1056,26 +1056,15 @@ const LostItemsReport = () => {
 
                 <div style={styles.formGroup}>
                   <label htmlFor="item-description" style={styles.labelRequired}>
-                    Item Description *
+                    Incident Description *
                   </label>
                   <textarea
                     id="item-description"
                     value={formData.itemDescription}
                     onChange={(e) => setFormData({ ...formData, itemDescription: e.target.value })}
                     style={styles.textarea}
-                    placeholder="Detailed description including color, brand, model, distinguishing features..."
+                    placeholder="Detailed description Of the issue faced by you."
                     required
-                  />
-                </div>
-
-                <div style={styles.formGroup}>
-                  <label htmlFor="item-value" style={styles.labelRequired}>Estimated Value (optional)</label>
-                  <input
-                    type="text"
-                    id="item-value"
-                    value={formData.itemValue}
-                    onChange={(e) => setFormData({ ...formData, itemValue: e.target.value })}
-                    style={styles.input}
                   />
                 </div>
 
