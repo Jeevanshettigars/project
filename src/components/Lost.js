@@ -3,7 +3,7 @@ import { AlertCircle, CheckCircle, Clock, MapPin, Package, User, History, Plus, 
 
 const LostItemsReport = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [currentView, setCurrentView] = useState('dashboard');
+  const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard', 'form', 'history'
   const [loginError, setLoginError] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -15,12 +15,14 @@ const LostItemsReport = () => {
   const [userReports, setUserReports] = useState([]);
   const [selectedReport, setSelectedReport] = useState(null);
 
+  // Login form state
   const [loginData, setLoginData] = useState({
     email: '',
     password: '',
     remember: true
   });
 
+  // Form state
   const [formData, setFormData] = useState({
     reporterName: '',
     reporterPhone: '',
@@ -37,6 +39,7 @@ const LostItemsReport = () => {
 
   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyiikADJd5LCVGM9_K17uyl778_dkClT_vJrX_Dldw_TnV5j5QnAaK7MokQGh9lb3Hu/exec';
 
+  // Extract name from email
   const extractNameFromEmail = (email) => {
     let name = email.split('@')[0];
     name = name.replace(/[^a-zA-Z]/g, ' ');
@@ -44,13 +47,17 @@ const LostItemsReport = () => {
     return name.trim() || 'User';
   };
 
+  // Fetch user reports
+  // Fetch user reports
   const fetchUserReports = async (email) => {
     setIsLoadingHistory(true);
     setErrorMessage('');
+    
     const fetchPayload = {
       action: "getUserReports",
       email: email
     };
+
     try {
       const response = await fetch(SCRIPT_URL, {
         method: 'POST',
@@ -59,9 +66,12 @@ const LostItemsReport = () => {
         },
         body: JSON.stringify(fetchPayload),
       });
+
       if (response.ok) {
         const data = await response.json();
+        
         if (data.success) {
+          // Transform the data to ensure consistent structure
           const transformedReports = (data.reports || []).map(report => ({
             id: report.id || `RPT${Date.now()}`,
             timestamp: report.timestamp || new Date().toISOString(),
@@ -79,6 +89,7 @@ const LostItemsReport = () => {
             reporterName: report.reporterName || '',
             reporterEmail: report.reporterEmail || email
           }));
+          
           setUserReports(transformedReports);
         } else {
           console.error('API Error:', data.message || 'Failed to fetch reports');
@@ -96,16 +107,18 @@ const LostItemsReport = () => {
       setIsLoadingHistory(false);
     }
   };
-
+  // Handle login
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoginError(false);
     setIsLoggingIn(true);
+
     const loginPayload = {
       action: "login",
       email: loginData.email,
       password: loginData.password
     };
+
     try {
       await fetch(SCRIPT_URL, {
         method: 'POST',
@@ -115,9 +128,11 @@ const LostItemsReport = () => {
         },
         body: JSON.stringify(loginPayload),
       });
+
       setTimeout(() => {
         const validDomains = ["jainuniversity.ac.in"];
         const domain = loginData.email.split('@')[1];
+        
         if (validDomains.includes(domain)) {
           const extractedName = extractNameFromEmail(loginData.email);
           setUserEmail(loginData.email);
@@ -139,6 +154,7 @@ const LostItemsReport = () => {
     }
   };
 
+  // Handle logout
   const handleLogout = () => {
     setIsLoggedIn(false);
     setCurrentView('dashboard');
@@ -160,10 +176,12 @@ const LostItemsReport = () => {
       itemValue: '',
       additionalNotes: ''
     });
+
     const logoutPayload = {
       action: "logout",
       email: userEmail || "unknown"
     };
+
     fetch(SCRIPT_URL, {
       method: 'POST',
       mode: 'no-cors',
@@ -174,18 +192,22 @@ const LostItemsReport = () => {
     }).catch(error => console.error('Logout error:', error));
   };
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSuccessMessage(false);
     setErrorMessage('');
     setIsSubmitting(true);
+
     const requiredFields = ['reporterName', 'reporterPhone', 'branch', 'incidentDate', 'location', 'itemCategory', 'itemName', 'itemDescription'];
     const missingFields = requiredFields.filter(field => !formData[field]);
+
     if (missingFields.length > 0) {
       setErrorMessage('Please fill in all required fields.');
       setIsSubmitting(false);
       return;
     }
+
     const timestamp = new Date().toISOString();
     const submissionData = {
       action: "submitReport",
@@ -194,6 +216,7 @@ const LostItemsReport = () => {
       reporterEmail: userEmail,
       ...formData
     };
+
     try {
       await fetch(SCRIPT_URL, {
         method: 'POST',
@@ -203,8 +226,10 @@ const LostItemsReport = () => {
         },
         body: JSON.stringify(submissionData),
       });
+
       setSuccessMessage(true);
       setIsSubmitting(false);
+      
       const reporterName = formData.reporterName;
       setFormData({
         reporterName,
@@ -219,7 +244,11 @@ const LostItemsReport = () => {
         itemValue: '',
         additionalNotes: ''
       });
+
+      // Refresh user reports
       fetchUserReports(userEmail);
+      
+      // Switch back to dashboard after successful submission
       setTimeout(() => {
         setCurrentView('dashboard');
         setSuccessMessage(false);
@@ -231,6 +260,7 @@ const LostItemsReport = () => {
     }
   };
 
+  // Format date for display
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-IN', {
@@ -242,6 +272,7 @@ const LostItemsReport = () => {
     });
   };
 
+  // Get status color
   const getStatusColor = (status) => {
     switch (status) {
       case 'Found': return '#22c55e';
@@ -251,6 +282,7 @@ const LostItemsReport = () => {
     }
   };
 
+  // CSS Styles
   const styles = {
     container: {
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
@@ -264,9 +296,9 @@ const LostItemsReport = () => {
       marginBottom: '2rem'
     },
     title: {
-      fontSize: '2rem',
+      fontSize: '2.5rem',
       fontWeight: 'bold',
-      color: '#fff',
+      color: 'white',
       marginBottom: '0.5rem',
       textShadow: '0 2px 4px rgba(0,0,0,0.3)'
     },
@@ -280,12 +312,12 @@ const LostItemsReport = () => {
       margin: '0 auto'
     },
     formContainer: {
-      maxWidth: '400px',
+      maxWidth: '700px',
       margin: '0 auto',
       backgroundColor: 'rgba(255, 255, 255, 0.95)',
       borderRadius: '16px',
-      boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
-      padding: '2rem',
+      boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+      padding: '2.5rem',
       border: '1px solid #e2e8f0'
     },
     card: {
@@ -341,11 +373,7 @@ const LostItemsReport = () => {
     welcomeCard: {
       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
       color: 'white',
-      textAlign: 'center',
-      borderRadius: '16px',
-      padding: '1.5rem',
-      boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
-      marginBottom: '2rem'
+      textAlign: 'center'
     },
     statsGrid: {
       display: 'grid',
@@ -434,15 +462,14 @@ const LostItemsReport = () => {
       color: 'white',
       border: 'none',
       borderRadius: '10px',
-      fontSize: '1rem',
+      fontSize: '0.9rem',
       fontWeight: '600',
       cursor: 'pointer',
       transition: 'all 0.3s ease',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: '0.5rem',
-      width: '100%'
+      gap: '0.5rem'
     },
     buttonSecondary: {
       backgroundColor: '#6b7280',
@@ -526,318 +553,651 @@ const LostItemsReport = () => {
       borderTop: '2px solid currentColor',
       borderRadius: '50%',
       animation: 'spin 1s linear infinite'
+    },
+    modal: {
+      position: 'fixed',
+      top: '0',
+      left: '0',
+      right: '0',
+      bottom: '0',
+      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: '1000',
+      padding: '2rem'
+    },
+    modalContent: {
+      backgroundColor: 'white',
+      borderRadius: '16px',
+      maxWidth: '600px',
+      width: '100%',
+      maxHeight: '80vh',
+      overflow: 'auto',
+      padding: '2rem'
     }
   };
 
+  const FloatingLabelInput = ({ type, id, value, onChange, placeholder, required, label }) => {
+    const [focused, setFocused] = useState(false);
+    const [hasValue, setHasValue] = useState(false);
+
+    useEffect(() => {
+      setHasValue(value && value.length > 0);
+    }, [value]);
+
+    const isActive = focused || hasValue;
+
+    return (
+      <div style={styles.floatLabel}>
+        <input
+          type={type}
+          id={id}
+          value={value}
+          onChange={onChange}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          style={styles.input}
+          required={required}
+        />
+        <label 
+          htmlFor={id}
+          style={{
+            ...styles.label,
+            ...(isActive ? styles.labelActive : {})
+          }}
+        >
+          {label} {required && '*'}
+        </label>
+      </div>
+    );
+  };
+
+  const ReportModal = ({ report, onClose }) => (
+    <div style={styles.modal} onClick={onClose}>
+      <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <h3 style={{ margin: '0', fontSize: '1.5rem', fontWeight: '600' }}>Report Details</h3>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
+        </div>
+        
+        <div style={{ marginBottom: '1rem' }}>
+          <span style={{...styles.statusBadge, backgroundColor: getStatusColor(report.status)}}>{report.status}</span>
+        </div>
+
+        <div style={styles.reportMeta}>
+          <div style={styles.metaItem}>
+            <Package size={16} />
+            <span><strong>Item:</strong> {report.itemName}</span>
+          </div>
+          <div style={styles.metaItem}>
+            <Calendar size={16} />
+            <span><strong>Date Lost:</strong> {new Date(report.incidentDate).toLocaleDateString()}</span>
+          </div>
+          <div style={styles.metaItem}>
+            <MapPin size={16} />
+            <span><strong>Location:</strong> {report.location}</span>
+          </div>
+          <div style={styles.metaItem}>
+            <Building size={16} />
+            <span><strong>Campus:</strong> {report.branch}</span>
+          </div>
+        </div>
+
+        <div style={{ marginTop: '1.5rem' }}>
+          <h4 style={{ marginBottom: '0.5rem' }}>Description:</h4>
+          <p style={{ color: '#6b7280', lineHeight: '1.5' }}>{report.itemDescription}</p>
+        </div>
+
+        {report.itemValue && (
+          <div style={{ marginTop: '1rem' }}>
+            <h4 style={{ marginBottom: '0.5rem' }}>Estimated Value:</h4>
+            <p style={{ color: '#6b7280' }}>{report.itemValue}</p>
+          </div>
+        )}
+
+        <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem' }}>
+          <button onClick={onClose} style={styles.button}>Close</button>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div style={styles.container}>
+      <style>
+        {`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+          
+          input:focus, select:focus, textarea:focus {
+            border-color: #4299e1 !important;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1) !important;
+          }
+          
+          button:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+          }
+          
+          .report-card:hover {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+            transform: translateY(-2px);
+          }
+        `}
+      </style>
+      
       <div style={styles.header}>
-        <h1 style={styles.title}>Lost Items Reporting System</h1>
-        <p style={styles.subtitle}>Report, track, and recover lost items with ease</p>
+        <h1 style={styles.title}>Lost Items Portal</h1>
+        <p style={styles.subtitle}>Campus Lost & Found Management System</p>
       </div>
-      <div style={styles.dashboardContainer}>
-        {!isLoggedIn ? (
-          <div style={styles.formContainer}>
-            <form onSubmit={handleLogin}>
-              <div style={styles.formGroup}>
-                <label style={styles.labelRequired}>Email</label>
-                <input
-                  type="email"
-                  style={styles.input}
-                  value={loginData.email}
-                  onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
-                  required
-                />
+
+      {!isLoggedIn ? (
+        /* Login Form */
+        <div style={styles.formContainer}>
+          {loginError && (
+            <div style={{...styles.message, ...styles.errorMessage}}>
+              <AlertCircle size={20} style={{marginRight: '0.5rem'}} />
+              Invalid login credentials. Please try again.
+            </div>
+          )}
+
+          <h2 style={{ fontSize: '1.5rem', fontWeight: '600', textAlign: 'center', marginBottom: '2rem' }}>
+            Login to Continue
+          </h2>
+
+          <form onSubmit={handleLogin}>
+            <div style={styles.formGroup}>
+             <FloatingLabelInput
+  type="email"
+  id="email"
+  value={loginData.email}
+  onChange={(e) =>
+    setLoginData(prev => ({ ...prev, email: e.target.value }))
+  }
+  label="Email Address"
+  required={true}
+/>
+            </div>
+
+            <div style={styles.formGroup}>
+              <FloatingLabelInput
+                type="password"
+                id="password"
+                value={loginData.password}
+                onChange={(e) =>
+    setLoginData(prev => ({ ...prev, email: e.target.value }))
+  }
+                  label="Password"
+                required={true}
+              />
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
+              <input
+                type="checkbox"
+                id="remember"
+                checked={loginData.remember}
+                onChange={(e) => setLoginData(prev => ({ ...prev, remember: e.target.checked }))}
+              />
+              <label htmlFor="remember" style={{ fontSize: '0.9rem' }}>Remember me</label>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoggingIn}
+              style={{
+                ...styles.button,
+                width: '100%',
+                padding: '1rem',
+                opacity: isLoggingIn ? 0.6 : 1
+              }}
+            >
+              {isLoggingIn ? (
+                <>
+                  <div style={styles.spinner}></div>
+                  Logging in...
+                </>
+              ) : (
+                'Login'
+              )}
+            </button>
+          </form>
+        </div>
+      ) : (
+        /* Dashboard */
+        <div style={styles.dashboardContainer}>
+          {/* Navigation */}
+          <div style={styles.navBar}>
+            <div style={styles.userInfo}>
+              <User size={20} />
+              <span style={{ fontWeight: '600' }}>Welcome, {userName}</span>
+              <span style={{ color: '#6b7280', fontSize: '0.9rem' }}>{userEmail}</span>
+            </div>
+            
+            <div style={styles.navButtons}>
+              <button
+                onClick={() => setCurrentView('dashboard')}
+                style={{
+                  ...styles.navButton,
+                  ...(currentView === 'dashboard' ? styles.navButtonActive : {})
+                }}
+              >
+                <User size={18} />
+                Dashboard
+              </button>
+              <button
+                onClick={() => setCurrentView('form')}
+                style={{
+                  ...styles.navButton,
+                  ...(currentView === 'form' ? styles.navButtonActive : {})
+                }}
+              >
+                <Plus size={18} />
+                Report Lost Item
+              </button>
+              <button
+                onClick={() => setCurrentView('history')}
+                style={{
+                  ...styles.navButton,
+                  ...(currentView === 'history' ? styles.navButtonActive : {})
+                }}
+              >
+                <History size={18} />
+                My Reports
+              </button>
+              <button onClick={handleLogout} style={{...styles.navButton, ...styles.buttonSecondary}}>
+                Logout
+              </button>
+            </div>
+          </div>
+
+          {/* Dashboard View */}
+          {currentView === 'dashboard' && (
+            <>
+              {/* Welcome Card */}
+              <div style={{...styles.card, ...styles.welcomeCard}}>
+                <h2 style={{ fontSize: '2rem', marginBottom: '1rem' }}>Welcome to Your Dashboard</h2>
+                <p style={{ fontSize: '1.1rem', opacity: '0.9', margin: '0' }}>
+                  Manage your lost item reports and track their status
+                </p>
               </div>
-              <div style={styles.formGroup}>
-                <label style={styles.labelRequired}>Password</label>
-                <input
-                  type="password"
-                  style={styles.input}
-                  value={loginData.password}
-                  onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-                  required
-                />
+
+              {/* Stats Grid */}
+              <div style={styles.statsGrid}>
+                <div style={styles.statCard}>
+                  <div style={{...styles.statIcon, backgroundColor: '#dbeafe', color: '#3b82f6'}}>
+                    <Package size={24} />
+                  </div>
+                  <div>
+                    <h3 style={{ margin: '0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
+                      {userReports.length}
+                    </h3>
+                    <p style={{ margin: '0', color: '#6b7280', fontSize: '0.9rem' }}>Total Reports</p>
+                  </div>
+                </div>
+
+                <div style={styles.statCard}>
+                  <div style={{...styles.statIcon, backgroundColor: '#dcfce7', color: '#22c55e'}}>
+                    <CheckCircle size={24} />
+                  </div>
+                  <div>
+                    <h3 style={{ margin: '0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
+                      {userReports.filter(r => r.status === 'Found').length}
+                    </h3>
+                    <p style={{ margin: '0', color: '#6b7280', fontSize: '0.9rem' }}>Items Found</p>
+                  </div>
+                </div>
+
+                <div style={styles.statCard}>
+                  <div style={{...styles.statIcon, backgroundColor: '#fef3c7', color: '#f59e0b'}}>
+                    <Clock size={24} />
+                  </div>
+                  <div>
+                    <h3 style={{ margin: '0', fontSize: '2rem', fontWeight: '700', color: '#1f2937' }}>
+                      {userReports.filter(r => r.status === 'Under Investigation').length}
+                    </h3>
+                    <p style={{ margin: '0', color: '#6b7280', fontSize: '0.9rem' }}>Pending</p>
+                  </div>
+                </div>
               </div>
-              <div style={styles.formGroup}>
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={loginData.remember}
-                    onChange={(e) => setLoginData({ ...loginData, remember: e.target.checked })}
-                  />
-                  Remember me
-                </label>
+
+              {/* Quick Actions */}
+              <div style={styles.card}>
+                <h3 style={{ marginBottom: '1.5rem', fontSize: '1.3rem', fontWeight: '600' }}>Quick Actions</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                  <button
+                    onClick={() => setCurrentView('form')}
+                    style={{...styles.button, padding: '1.5rem', flexDirection: 'column', height: 'auto'}}
+                  >
+                    <Plus size={24} />
+                    <span style={{ marginTop: '0.5rem' }}>Report New Lost Item</span>
+                  </button>
+                  <button
+                    onClick={() => setCurrentView('history')}
+                    style={{...styles.button, ...styles.buttonSecondary, padding: '1.5rem', flexDirection: 'column', height: 'auto'}}
+                  >
+                    <History size={24} />
+                    <span style={{ marginTop: '0.5rem' }}>View All Reports</span>
+                  </button>
+                </div>
               </div>
-              {loginError && (
-                <div style={{ ...styles.message, ...styles.errorMessage }}>
-                  <AlertCircle size={20} style={{ marginRight: '0.5rem' }} />
-                  Invalid email or password. Please try again.
+
+              {/* Recent Reports */}
+              {userReports.length > 0 && (
+                <div style={styles.card}>
+                  <h3 style={{ marginBottom: '1.5rem', fontSize: '1.3rem', fontWeight: '600' }}>Recent Reports</h3>
+                  <div style={styles.reportsGrid}>
+                    {userReports.slice(0, 3).map((report, index) => (
+                      <div
+                        key={index}
+                        className="report-card"
+                        style={styles.reportCard}
+                        onClick={() => setSelectedReport(report)}
+                      >
+                        <div style={styles.reportHeader}>
+                          <div>
+                            <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '1.1rem', fontWeight: '600' }}>
+                              {report.itemName}
+                            </h4>
+                            <p style={{ margin: '0', color: '#6b7280', fontSize: '0.9rem' }}>
+                              {report.itemCategory}
+                            </p>
+                          </div>
+                          <span style={{...styles.statusBadge, backgroundColor: getStatusColor(report.status)}}>
+                            {report.status}
+                          </span>
+                        </div>
+                        
+                        <div style={styles.reportMeta}>
+                          <div style={styles.metaItem}>
+                            <Calendar size={14} />
+                            <span>{formatDate(report.timestamp)}</span>
+                          </div>
+                          <div style={styles.metaItem}>
+                            <MapPin size={14} />
+                            <span>{report.location}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
-              <button type="submit" style={styles.button} disabled={isLoggingIn}>
-                {isLoggingIn ? (
-                  <span style={styles.spinner}></span>
-                ) : (
-                  'Login'
-                )}
-              </button>
-            </form>
-          </div>
-        ) : (
-          <>
-            <div style={styles.navBar}>
-              <div style={styles.userInfo}>
-                <User size={20} />
-                <span>{userName}</span>
-                <span>{userEmail}</span>
-              </div>
-              <div style={styles.navButtons}>
-                <button
-                  style={currentView === 'dashboard' ? { ...styles.navButton, ...styles.navButtonActive } : styles.navButton}
-                  onClick={() => setCurrentView('dashboard')}
-                >
-                  <Package size={16} />
-                  Dashboard
-                </button>
-                <button
-                  style={currentView === 'form' ? { ...styles.navButton, ...styles.navButtonActive } : styles.navButton}
-                  onClick={() => setCurrentView('form')}
-                >
-                  <Plus size={16} />
-                  Report Lost Item
-                </button>
-                <button
-                  style={currentView === 'history' ? { ...styles.navButton, ...styles.navButtonActive } : styles.navButton}
-                  onClick={() => setCurrentView('history')}
-                >
-                  <History size={16} />
-                  My Reports
-                </button>
-                <button style={styles.navButton} onClick={handleLogout}>
-                  <Eye size={16} />
-                  Logout
-                </button>
-              </div>
-            </div>
-            {currentView === 'dashboard' && (
-              <div style={styles.card}>
-                <div style={styles.welcomeCard}>
-                  <h2>Welcome, {userName}!</h2>
-                  <p>You can report lost items or view your previous reports.</p>
+            </>
+          )}
+
+          {/* Form View */}
+          {currentView === 'form' && (
+            <div style={styles.formContainer}>
+              {successMessage && (
+                <div style={{...styles.message, ...styles.successMessage}}>
+                  <CheckCircle size={20} style={{marginRight: '0.75rem'}} />
+                  Your report has been submitted successfully!
                 </div>
-                <div style={styles.statsGrid}>
-                  <div style={styles.statCard}>
-                    <div style={{ ...styles.statIcon, backgroundColor: '#4299e1', color: 'white' }}>
-                      <Clock size={24} />
-                    </div>
-                    <div>
-                      <h3>Active Reports</h3>
-                      <p>{userReports.filter(r => r.status === 'Under Investigation').length}</p>
-                    </div>
-                  </div>
-                  <div style={styles.statCard}>
-                    <div style={{ ...styles.statIcon, backgroundColor: '#22c55e', color: 'white' }}>
-                      <CheckCircle size={24} />
-                    </div>
-                    <div>
-                      <h3>Resolved</h3>
-                      <p>{userReports.filter(r => r.status === 'Found').length}</p>
-                    </div>
-                  </div>
-                  <div style={styles.statCard}>
-                    <div style={{ ...styles.statIcon, backgroundColor: '#6b7280', color: 'white' }}>
-                      <Calendar size={24} />
-                    </div>
-                    <div>
-                      <h3>Closed</h3>
-                      <p>{userReports.filter(r => r.status === 'Closed').length}</p>
-                    </div>
-                  </div>
+              )}
+
+              {errorMessage && (
+                <div style={{...styles.message, ...styles.errorMessage}}>
+                  <AlertCircle size={20} style={{marginRight: '0.75rem'}} />
+                  {errorMessage}
                 </div>
-              </div>
-            )}
-            {currentView === 'form' && (
-              <div style={styles.formContainer}>
-                <h2>Report a Lost Item</h2>
-                {successMessage && (
-                  <div style={{ ...styles.message, ...styles.successMessage }}>
-                    <CheckCircle size={20} style={{ marginRight: '0.5rem' }} />
-                    Your report has been submitted successfully!
-                  </div>
-                )}
-                {errorMessage && (
-                  <div style={{ ...styles.message, ...styles.errorMessage }}>
-                    <AlertCircle size={20} style={{ marginRight: '0.5rem' }} />
-                    {errorMessage}
-                  </div>
-                )}
-                <form onSubmit={handleSubmit}>
-                  <div style={styles.row}>
-                    <div style={styles.formGroup}>
-                      <label style={styles.labelRequired}>Reporter Name</label>
-                      <input
-                        type="text"
-                        style={styles.input}
-                        value={formData.reporterName}
-                        onChange={(e) => setFormData({ ...formData, reporterName: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div style={styles.formGroup}>
-                      <label style={styles.labelRequired}>Reporter Phone</label>
-                      <input
-                        type="tel"
-                        style={styles.input}
-                        value={formData.reporterPhone}
-                        onChange={(e) => setFormData({ ...formData, reporterPhone: e.target.value })}
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div style={styles.row}>
-                    <div style={styles.formGroup}>
-                      <label style={styles.labelRequired}>Branch</label>
-                      <select
-                        style={styles.select}
-                        value={formData.branch}
-                        onChange={(e) => setFormData({ ...formData, branch: e.target.value })}
-                        required
-                      >
-                        <option value="">Select Branch</option>
-                        <option value="Main Campus">Main Campus</option>
-                        <option value="City Campus">City Campus</option>
-                        <option value="North Campus">North Campus</option>
-                      </select>
-                    </div>
-                    <div style={styles.formGroup}>
-                      <label style={styles.labelRequired}>Incident Date</label>
-                      <input
-                        type="date"
-                        style={styles.input}
-                        value={formData.incidentDate}
-                        onChange={(e) => setFormData({ ...formData, incidentDate: e.target.value })}
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div style={styles.row}>
-                    <div style={styles.formGroup}>
-                      <label>Time Lost</label>
-                      <input
-                        type="time"
-                        style={styles.input}
-                        value={formData.timeLost}
-                        onChange={(e) => setFormData({ ...formData, timeLost: e.target.value })}
-                      />
-                    </div>
-                    <div style={styles.formGroup}>
-                      <label style={styles.labelRequired}>Location</label>
-                      <input
-                        type="text"
-                        style={styles.input}
-                        value={formData.location}
-                        onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div style={styles.row}>
-                    <div style={styles.formGroup}>
-                      <label style={styles.labelRequired}>Item Category</label>
-                      <select
-                        style={styles.select}
-                        value={formData.itemCategory}
-                        onChange={(e) => setFormData({ ...formData, itemCategory: e.target.value })}
-                        required
-                      >
-                        <option value="">Select Category</option>
-                        <option value="Electronics">Electronics</option>
-                        <option value="Documents">Documents</option>
-                        <option value="Jewelry">Jewelry</option>
-                        <option value="Clothing">Clothing</option>
-                        <option value="Other">Other</option>
-                      </select>
-                    </div>
-                    <div style={styles.formGroup}>
-                      <label style={styles.labelRequired}>Item Name</label>
-                      <input
-                        type="text"
-                        style={styles.input}
-                        value={formData.itemName}
-                        onChange={(e) => setFormData({ ...formData, itemName: e.target.value })}
-                        required
-                      />
-                    </div>
-                  </div>
+              )}
+
+              <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '2rem', textAlign: 'center' }}>
+                Report Lost Item
+              </h2>
+
+              <form onSubmit={handleSubmit}>
+                {/* Reporter Information */}
+                <h3 style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '1.5rem', color: '#374151' }}>
+                  Reporter Information
+                </h3>
+                
+                <div style={styles.row}>
+                  <FloatingLabelInput
+                    type="text"
+                    id="reporter-name"
+                    value={formData.reporterName}
+                    onChange={(e) => setFormData(prev => ({ ...prev, reporterName: e.target.value }))}
+                    label="Your Name"
+                    required={true}
+                  />
+                  <FloatingLabelInput
+                    type="tel"
+                    id="reporter-phone"
+                    value={formData.reporterPhone}
+                    onChange={(e) => setFormData(prev => ({ ...prev, reporterPhone: e.target.value }))}
+                    label="Phone Number"
+                    required={true}
+                  />
+                </div>
+
+                <div style={styles.formGroup}>
+                  <label htmlFor="branch" style={styles.labelRequired}>Campus Branch *</label>
+                  <select
+                    id="branch"
+                    value={formData.branch}
+                    onChange={(e) => setFormData(prev => ({ ...prev, branch: e.target.value }))}
+                    style={styles.select}
+                    required
+                  >
+                    <option value="">Select campus branch</option>
+                    <option value="FET Campus">FET Campus</option>
+                    <option value="PU Block">PU Block</option>
+                    <option value="Aerospace Campus">Aerospace Campus</option>
+                  </select>
+                </div>
+
+                {/* Incident Details */}
+                <h3 style={{ fontSize: '1.2rem', fontWeight: '600', margin: '2rem 0 1.5rem 0', color: '#374151' }}>
+                  Incident Details
+                </h3>
+
+                <div style={styles.row}>
                   <div style={styles.formGroup}>
-                    <label style={styles.labelRequired}>Item Description</label>
-                    <textarea
-                      style={styles.textarea}
-                      value={formData.itemDescription}
-                      onChange={(e) => setFormData({ ...formData, itemDescription: e.target.value })}
+                    <label htmlFor="incident-date" style={styles.labelRequired}>Date Lost *</label>
+                    <input
+                      type="date"
+                      id="incident-date"
+                      value={formData.incidentDate}
+                      onChange={(e) => setFormData(prev => ({ ...prev, incidentDate: e.target.value }))}
+                      style={styles.input}
                       required
                     />
                   </div>
-                  <div style={styles.row}>
-                    <div style={styles.formGroup}>
-                      <label>Estimated Value</label>
-                      <input
-                        type="number"
-                        style={styles.input}
-                        value={formData.itemValue}
-                        onChange={(e) => setFormData({ ...formData, itemValue: e.target.value })}
-                      />
-                    </div>
-                    <div style={styles.formGroup}>
-                      <label>Additional Notes</label>
-                      <textarea
-                        style={styles.textarea}
-                        value={formData.additionalNotes}
-                        onChange={(e) => setFormData({ ...formData, additionalNotes: e.target.value })}
-                      />
-                    </div>
+                  <FloatingLabelInput
+                    type="text"
+                    id="time-lost"
+                    value={formData.timeLost}
+                    onChange={(e) => setFormData(prev => ({ ...prev, timeLost: e.target.value }))}
+                    label="Approximate Time"
+                    required={false}
+                  />
+                </div>
+
+                <div style={styles.formGroup}>
+                  <FloatingLabelInput
+                    type="text"
+                    id="location"
+                    value={formData.location}
+                    onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                    label="Last Known Location"
+                    required={true}
+                  />
+                </div>
+
+                {/* Item Information */}
+                <h3 style={{ fontSize: '1.2rem', fontWeight: '600', margin: '2rem 0 1.5rem 0', color: '#374151' }}>
+                  Item Information
+                </h3>
+
+                <div style={styles.row}>
+                  <div style={styles.formGroup}>
+                    <label htmlFor="item-category" style={styles.labelRequired}>Item Category *</label>
+                    <select
+                      id="item-category"
+                      value={formData.itemCategory}
+                      onChange={(e) => setFormData(prev => ({ ...prev, itemCategory: e.target.value }))}
+                      style={styles.select}
+                      required
+                    >
+                      <option value="">Select category</option>
+                      <option value="Electronics">Electronics</option>
+                      <option value="Personal Item">Personal Item</option>
+                      <option value="Book/Notebook">Book/Notebook</option>
+                      <option value="Clothing">Clothing</option>
+                      <option value="ID/Card">ID/Card</option>
+                      <option value="Other">Other</option>
+                    </select>
                   </div>
-                  <button type="submit" style={styles.button} disabled={isSubmitting}>
-                    {isSubmitting ? (
-                      <span style={styles.spinner}></span>
-                    ) : (
-                      'Submit Report'
-                    )}
-                  </button>
-                </form>
+                  <FloatingLabelInput
+                    type="text"
+                    id="item-name"
+                    value={formData.itemName}
+                    onChange={(e) => setFormData(prev => ({ ...prev, itemName: e.target.value }))}
+                    label="Item Name"
+                    required={true}
+                  />
+                </div>
+
+                <div style={styles.formGroup}>
+                  <label htmlFor="item-description" style={styles.labelRequired}>
+                    Item Description *
+                  </label>
+                  <textarea
+                    id="item-description"
+                    value={formData.itemDescription}
+                    onChange={(e) => setFormData(prev => ({ ...prev, itemDescription: e.target.value }))}
+                    style={styles.textarea}
+                    placeholder="Detailed description including color, brand, model, distinguishing features..."
+                    required
+                  />
+                </div>
+
+                <div style={styles.formGroup}>
+                  <FloatingLabelInput
+                    type="text"
+                    id="item-value"
+                    value={formData.itemValue}
+                    onChange={(e) => setFormData(prev => ({ ...prev, itemValue: e.target.value }))}
+                    label="Estimated Value (optional)"
+                    required={false}
+                  />
+                </div>
+
+                {/* Additional Information */}
+                <h3 style={{ fontSize: '1.2rem', fontWeight: '600', margin: '2rem 0 1.5rem 0', color: '#374151' }}>
+                  Additional Information
+                </h3>
+
+                <div style={styles.formGroup}>
+                  <label htmlFor="additional-notes" style={styles.labelRequired}>Additional Notes</label>
+                  <textarea
+                    id="additional-notes"
+                    value={formData.additionalNotes}
+                    onChange={(e) => setFormData(prev => ({ ...prev, additionalNotes: e.target.value }))}
+                    style={styles.textarea}
+                    placeholder="Any additional information that might help..."
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  style={{
+                    ...styles.button,
+                    width: '100%',
+                    padding: '1rem',
+                    opacity: isSubmitting ? 0.6 : 1
+                  }}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div style={styles.spinner}></div>
+                      Submitting Report...
+                    </>
+                  ) : (
+                    'Submit Lost Item Report'
+                  )}
+                </button>
+              </form>
+            </div>
+          )}
+
+          {/* History View */}
+          {currentView === 'history' && (
+            <div style={styles.card}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: '600', margin: '0' }}>My Reports</h2>
+                <button
+                  onClick={() => fetchUserReports(userEmail)}
+                  disabled={isLoadingHistory}
+                  style={{...styles.button, width: 'auto'}}
+                >
+                  {isLoadingHistory ? (
+                    <>
+                      <div style={styles.spinner}></div>
+                      Refreshing...
+                    </>
+                  ) : (
+                    'Refresh'
+                  )}
+                </button>
               </div>
-            )}
-            {currentView === 'history' && (
-              <div style={styles.card}>
-                <h2>My Reports</h2>
-                {isLoadingHistory && <span style={styles.spinner}></span>}
-                {errorMessage && (
-                  <div style={{ ...styles.message, ...styles.errorMessage }}>
-                    <AlertCircle size={20} style={{ marginRight: '0.5rem' }} />
-                    {errorMessage}
-                  </div>
-                )}
+
+              {isLoadingHistory ? (
+                <div style={{ textAlign: 'center', padding: '3rem', color: '#6b7280' }}>
+                  <div style={styles.spinner}></div>
+                  <p style={{ marginTop: '1rem' }}>Loading your reports...</p>
+                </div>
+              ) : userReports.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '3rem', color: '#6b7280' }}>
+                  <Package size={48} style={{ marginBottom: '1rem', opacity: '0.5' }} />
+                  <h3 style={{ margin: '0 0 1rem 0' }}>No Reports Found</h3>
+                  <p style={{ margin: '0 0 2rem 0' }}>You haven't submitted any lost item reports yet.</p>
+                  <button
+                    onClick={() => setCurrentView('form')}
+                    style={styles.button}
+                  >
+                    <Plus size={16} />
+                    Create First Report
+                  </button>
+                </div>
+              ) : (
                 <div style={styles.reportsGrid}>
-                  {userReports.map((report) => (
+                  {userReports.map((report, index) => (
                     <div
-                      key={report.id}
+                      key={index}
+                      className="report-card"
                       style={styles.reportCard}
-                      onClick={() => setSelectedReport(selectedReport?.id === report.id ? null : report)}
+                      onClick={() => setSelectedReport(report)}
                     >
                       <div style={styles.reportHeader}>
-                        <h3>{report.itemName}</h3>
-                        <span
-                          style={{
-                            ...styles.statusBadge,
-                            backgroundColor: getStatusColor(report.status)
-                          }}
-                        >
+                        <div>
+                          <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '1.2rem', fontWeight: '600' }}>
+                            {report.itemName}
+                          </h4>
+                          <p style={{ margin: '0', color: '#6b7280', fontSize: '0.9rem' }}>
+                            Report ID: {report.id}
+                          </p>
+                        </div>
+                        <span style={{...styles.statusBadge, backgroundColor: getStatusColor(report.status)}}>
                           {report.status}
                         </span>
                       </div>
-                      <p>{report.itemDescription}</p>
+                      
                       <div style={styles.reportMeta}>
+                        <div style={styles.metaItem}>
+                          <Calendar size={16} />
+                          <span>Reported: {formatDate(report.timestamp)}</span>
+                        </div>
+                        <div style={styles.metaItem}>
+                          <Clock size={16} />
+                          <span>Lost: {new Date(report.incidentDate).toLocaleDateString()}</span>
+                        </div>
                         <div style={styles.metaItem}>
                           <MapPin size={16} />
                           <span>{report.location}</span>
@@ -846,48 +1206,51 @@ const LostItemsReport = () => {
                           <Building size={16} />
                           <span>{report.branch}</span>
                         </div>
-                        <div style={styles.metaItem}>
-                          <Calendar size={16} />
-                          <span>{report.incidentDate}</span>
-                        </div>
-                        <div style={styles.metaItem}>
-                          <Clock size={16} />
-                          <span>{report.timeLost || 'Unknown'}</span>
-                        </div>
                       </div>
-                      {selectedReport?.id === report.id && (
-                        <div style={{ marginTop: '1rem' }}>
-                          <div style={styles.metaItem}>
-                            <User size={16} />
-                            <span>{report.reporterName}</span>
-                          </div>
-                          <div style={styles.metaItem}>
-                            <Phone size={16} />
-                            <span>{report.reporterPhone}</span>
-                          </div>
-                          <div style={styles.metaItem}>
-                            <Mail size={16} />
-                            <span>{report.reporterEmail}</span>
-                          </div>
-                          <div style={styles.metaItem}>
-                            <span>Estimated Value: {report.itemValue || 'Not specified'}</span>
-                          </div>
-                          <div style={styles.metaItem}>
-                            <span>Additional Notes: {report.additionalNotes || 'None'}</span>
-                          </div>
+
+                      <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
+                        <p style={{ margin: '0', fontSize: '0.9rem', color: '#374151', lineHeight: '1.4' }}>
+                          {report.itemDescription.length > 100 
+                            ? `${report.itemDescription.substring(0, 100)}...` 
+                            : report.itemDescription
+                          }
+                        </p>
+                      </div>
+
+                      <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={styles.metaItem}>
+                          <Package size={16} />
+                          <span>{report.itemCategory}</span>
                         </div>
-                      )}
+                        <button
+                          style={{...styles.button, padding: '0.5rem 1rem', fontSize: '0.8rem'}}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedReport(report);
+                          }}
+                        >
+                          <Eye size={14} />
+                          View Details
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
-          </>
-        )}
-      </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Report Detail Modal */}
+      {selectedReport && (
+        <ReportModal
+          report={selectedReport}
+          onClose={() => setSelectedReport(null)}
+        />
+      )}
     </div>
   );
 };
 
 export default LostItemsReport;
-
