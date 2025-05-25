@@ -264,9 +264,9 @@ const LostItemsReport = () => {
       marginBottom: '2rem'
     },
     title: {
-      fontSize: '2.5rem',
+      fontSize: '2rem',
       fontWeight: 'bold',
-      color: 'white',
+      color: '#fff',
       marginBottom: '0.5rem',
       textShadow: '0 2px 4px rgba(0,0,0,0.3)'
     },
@@ -280,12 +280,12 @@ const LostItemsReport = () => {
       margin: '0 auto'
     },
     formContainer: {
-      maxWidth: '700px',
+      maxWidth: '400px',
       margin: '0 auto',
       backgroundColor: 'rgba(255, 255, 255, 0.95)',
       borderRadius: '16px',
-      boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-      padding: '2.5rem',
+      boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+      padding: '2rem',
       border: '1px solid #e2e8f0'
     },
     card: {
@@ -341,7 +341,11 @@ const LostItemsReport = () => {
     welcomeCard: {
       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
       color: 'white',
-      textAlign: 'center'
+      textAlign: 'center',
+      borderRadius: '16px',
+      padding: '1.5rem',
+      boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+      marginBottom: '2rem'
     },
     statsGrid: {
       display: 'grid',
@@ -396,7 +400,7 @@ const LostItemsReport = () => {
       alignItems: 'center',
       gap: '0.5rem',
       fontSize: '0.9rem',
-      color: '6b7280'
+      color: '#6b7280'
     },
     statusBadge: {
       padding: '0.25rem 0.75rem',
@@ -430,14 +434,15 @@ const LostItemsReport = () => {
       color: 'white',
       border: 'none',
       borderRadius: '10px',
-      fontSize: '0.9rem',
+      fontSize: '1rem',
       fontWeight: '600',
       cursor: 'pointer',
       transition: 'all 0.3s ease',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: '0.5rem'
+      gap: '0.5rem',
+      width: '100%'
     },
     buttonSecondary: {
       backgroundColor: '#6b7280',
@@ -885,3 +890,4 @@ const LostItemsReport = () => {
 };
 
 export default LostItemsReport;
+
